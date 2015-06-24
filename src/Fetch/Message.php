@@ -471,7 +471,19 @@ class Message
      */
     public function getSubject()
     {
-        return isset($this->subject) ? $this->subject : null;
+        if (isset($this->subject)) {
+            $decoded = imap_mime_header_decode($this->subject);
+
+            $this->subject = '';
+
+            for ($i=0; $i<count($decoded); $i++) {
+                $this->subject .= $decoded[$i]->text;
+            }
+
+            return $this->subject;
+        }
+
+        return null;
     }
 
     /**
@@ -668,7 +680,8 @@ class Message
                     $currentAddress = array();
                     $currentAddress['address'] = $address->mailbox . '@' . $address->host;
                     if (isset($address->personal)) {
-                        $currentAddress['name'] = $address->personal;
+                        $decoded = imap_mime_header_decode($address->personal);
+                        $currentAddress['name'] = $decoded[0]->text;
                     }
                     $outputAddresses[] = $currentAddress;
                 }
